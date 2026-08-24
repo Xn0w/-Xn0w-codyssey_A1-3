@@ -74,8 +74,7 @@ vercel dev
 
 ## 배포 URL
 
-> 아직 배포 전입니다. Vercel에 배포한 뒤 이 자리에 실제 URL을 적어 넣으세요.
-> 예: `https://codememo-xn0w.vercel.app`
+**https://xn0w-codyssey-a1-3.vercel.app**
 
 ## 환경 변수
 
