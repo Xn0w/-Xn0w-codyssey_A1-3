@@ -1,2 +1,10 @@
+[project]
+name = "codememo-ai"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "google-genai>=0.3.0",
+]
+
 [tool.vercel]
 entrypoint = "api.review:handler"
