@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI 코드 리뷰 — CodeMemo</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+<div class="page">
+  <div class="gutter" aria-hidden="true"></div>
+  <div class="content">
+    <nav class="nav">
+      <div class="nav-brand"><span class="dot">&gt;_</span> CodeMemo</div>
+      <ul class="nav-links">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="review.html">AI 코드 리뷰</a></li>
+        <li><a href="guide.html">가이드</a></li>
+      </ul>
+    </nav>
+
+    <section class="hero" style="padding-bottom: 8px;">
+      <p class="eyebrow">AI 기능</p>
+      <h1>코드를 붙여넣어보세요</h1>
+      <p class="lede">언어를 선택하고 코드를 입력하면, 백엔드(api/review)가 Gemini API를 호출해 리뷰 결과를 돌려줍니다.</p>
+    </section>
+
+    <section style="padding-top: 8px;">
+      <form id="review-form">
+        <div class="field-row">
+          <div class="field" style="max-width: 220px;">
+            <label for="language">언어</label>
+            <select id="language" name="language">
+              <option value="python">Python</option>
+              <option value="javascript">JavaScript</option>
+              <option value="java">Java</option>
+              <option value="c">C</option>
+              <option value="etc">기타</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="code">코드</label>
+          <textarea id="code" name="code" placeholder="여기에 코드를 붙여넣으세요..." required></textarea>
+        </div>
+        <button type="submit" class="btn" id="submit-btn">AI 리뷰 요청</button>
+      </form>
+
+      <div id="status-area" aria-live="polite"></div>
+      <div id="result-area"></div>
+    </section>
+
+    <footer>CodeMemo · AI API 연동 학습용 프로젝트</footer>
+  </div>
+</div>
+<script src="js/main.js"></script>
+<script src="js/review.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CodeMemo — AI 코드 리뷰 도우미</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+<div class="page">
+  <div class="gutter" aria-hidden="true"></div>
+  <div class="content">
+    <nav class="nav">
+      <div class="nav-brand"><span class="dot">&gt;_</span> CodeMemo</div>
+      <ul class="nav-links">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="review.html">AI 코드 리뷰</a></li>
+        <li><a href="guide.html">가이드</a></li>
+      </ul>
+    </nav>
+
+    <section class="hero">
+      <p class="eyebrow">과제 제출 전, 5초 리뷰</p>
+      <h1>코드를 붙여넣으면<br /><span class="accent">AI가 줄 단위로</span> 짚어드립니다.</h1>
+      <p class="lede">
+        가독성, 잠재적 버그, 개선 포인트를 실제 코드 리뷰어처럼 짧고 구체적으로 알려주는
+        학생용 코드 리뷰 도구입니다. 과제 제출 전 마지막 점검, 팀 프로젝트 코드 리뷰 전
+        1차 필터로 사용해보세요.
+      </p>
+      <a class="btn" href="review.html">코드 리뷰 시작하기 →</a>
+    </section>
+
+    <section>
+      <h2>이런 상황에 씁니다</h2>
+      <div class="card-grid">
+        <div class="mini-card">
+          <p class="tag">01</p>
+          <h3>과제 제출 직전</h3>
+          <p>빠뜨린 예외 처리나 어색한 네이밍이 없는지 마지막으로 확인합니다.</p>
+        </div>
+        <div class="mini-card">
+          <p class="tag">02</p>
+          <h3>팀 코드 리뷰 전</h3>
+          <p>동료에게 PR을 올리기 전, AI가 먼저 걸러주는 1차 리뷰로 활용합니다.</p>
+        </div>
+        <div class="mini-card">
+          <p class="tag">03</p>
+          <h3>새 문법 학습 중</h3>
+          <p>익숙하지 않은 언어로 짠 코드가 관용적인 스타일인지 점검받습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>무엇을 돌려주나요</h2>
+      <div class="result-card" aria-hidden="true">
+        <div class="result-score"><span class="num">78</span><span class="label">/ 100 · 가독성·안정성 종합 점수</span></div>
+        <div class="finding good">
+          <span class="marker">+</span>
+          <div class="body"><p class="tag">Good</p><p>함수 이름이 역할을 명확히 드러냅니다.</p></div>
+        </div>
+        <div class="finding warn">
+          <span class="marker">!</span>
+          <div class="body"><p class="tag">Warn</p><p>반복문 안에서 리스트를 매번 새로 생성해 성능에 영향을 줄 수 있습니다.</p></div>
+        </div>
+        <div class="finding bad">
+          <span class="marker">-</span>
+          <div class="body"><p class="tag">Bug</p><p>0으로 나눌 수 있는 분기에 대한 예외 처리가 없습니다.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <footer>CodeMemo · AI API 연동 학습용 프로젝트</footer>
+  </div>
+</div>
+<script src="js/main.js"></script>
+</body>
+</html>
