@@ -30,6 +30,35 @@ function fillGutter() {
 }
 
 /**
+ * 보너스: 다크/라이트 테마 토글.
+ * localStorage에 사용자의 선택을 저장해, 다른 페이지로 이동하거나
+ * 다시 방문했을 때도 마지막에 고른 테마가 유지되도록 한다.
+ */
+const THEME_KEY = 'codememo_theme';
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.querySelector('.theme-toggle');
+  if (btn) {
+    btn.textContent = theme === 'light' ? '● 다크 모드' : '○ 라이트 모드';
+  }
+}
+
+function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY) || 'dark';
+  applyTheme(saved);
+
+  const btn = document.querySelector('.theme-toggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  });
+}
+
+/**
  * 현재 문서 경로와 네비게이션 링크의 href를 비교해서
  * 일치하는 링크에 aria-current="page"를 붙인다.
  * (CSS에서 이 속성을 이용해 밑줄 강조를 준다)
@@ -47,6 +76,7 @@ function markActiveNavLink() {
 window.addEventListener('DOMContentLoaded', () => {
   fillGutter();
   markActiveNavLink();
+  initTheme();
 });
 
 // 화면 크기가 바뀔 때마다 거터 줄번호도 다시 계산 (디바운스 적용)

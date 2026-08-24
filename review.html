@@ -19,6 +19,7 @@
         <li><a href="review.html">AI 코드 리뷰</a></li>
         <li><a href="guide.html">가이드</a></li>
       </ul>
+      <button type="button" class="theme-toggle" aria-label="다크/라이트 모드 전환">○ 라이트 모드</button>
     </nav>
 
     <section class="hero" style="padding-bottom: 8px;">
@@ -50,6 +51,17 @@
 
       <div id="status-area" aria-live="polite"></div>
       <div id="result-area"></div>
+    </section>
+
+    <section>
+      <div class="history-header">
+        <h2>최근 리뷰 기록</h2>
+        <button type="button" id="history-clear" class="history-clear">기록 지우기</button>
+      </div>
+      <p class="lede" style="margin-bottom: 16px; font-size: 13.5px;">
+        이 브라우저에만 저장되는 기록입니다(최근 10개). 항목을 클릭하면 결과를 다시 볼 수 있어요.
+      </p>
+      <div id="history-list" class="history-list"></div>
     </section>
 
     <footer>CodeMemo · AI API 연동 학습용 프로젝트</footer>

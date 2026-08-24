@@ -12,6 +12,8 @@
 // ===========================================================
 
 const REQUEST_TIMEOUT_MS = 20000; // 20초 넘게 응답이 없으면 타임아웃으로 간주
+const HISTORY_KEY = 'codememo_history'; // 보너스: 리뷰 기록 저장 키
+const HISTORY_MAX = 10; // 최근 10개까지만 보관
 
 const form = document.getElementById('review-form');
 const codeInput = document.getElementById('code');
@@ -19,6 +21,82 @@ const languageSelect = document.getElementById('language');
 const submitBtn = document.getElementById('submit-btn');
 const statusArea = document.getElementById('status-area');
 const resultArea = document.getElementById('result-area');
+const historyList = document.getElementById('history-list');
+const historyClearBtn = document.getElementById('history-clear');
+
+/**
+ * 보너스: 리뷰 기록(localStorage) 관련 함수들.
+ * "사용자 입력 → AI 처리 → 결과 저장" 흐름을 브라우저 저장소로 구현한다.
+ * 서버가 아닌 클라이언트에 저장되므로 기기/브라우저별로 별도 보관된다.
+ */
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveHistoryEntry(entry) {
+  const list = loadHistory();
+  list.unshift(entry); // 최신 항목을 맨 앞에
+  const trimmed = list.slice(0, HISTORY_MAX);
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+  } catch (_) {
+    // 저장 공간이 꽉 찬 경우 등은 조용히 무시 (기록 저장은 부가 기능이므로)
+  }
+  renderHistory();
+}
+
+function renderHistory() {
+  if (!historyList) return; // 이 요소가 없는 페이지(홈/가이드)에서는 아무것도 하지 않음
+
+  const list = loadHistory();
+  historyList.innerHTML = '';
+
+  if (list.length === 0) {
+    historyList.innerHTML = '<p class="history-empty">아직 저장된 리뷰 기록이 없습니다.</p>';
+    return;
+  }
+
+  list.forEach((entry) => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'history-item';
+
+    const time = new Date(entry.createdAt).toLocaleString('ko-KR', {
+      month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+
+    item.innerHTML = `
+      <span class="h-score">${entry.score}</span>
+      <span class="h-meta">
+        <span class="h-lang">${entry.language}</span>
+        <span class="h-time">${time}</span>
+        <div class="h-snippet">${entry.snippet}</div>
+      </span>
+    `;
+
+    // 기록 항목을 클릭하면 그 결과를 다시 화면에 불러와 보여준다.
+    item.addEventListener('click', () => {
+      renderResult(entry.result);
+      setStatus(null);
+    });
+
+    historyList.appendChild(item);
+  });
+}
+
+if (historyClearBtn) {
+  historyClearBtn.addEventListener('click', () => {
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+  });
+}
+
+renderHistory(); // 페이지 로드 시 기존 기록 표시
 
 /**
  * 상태 메시지(로딩/에러)를 status-area에 표시한다.
@@ -146,6 +224,15 @@ form.addEventListener('submit', async (event) => {
     const data = await response.json();
     setStatus(null);
     renderResult(data);
+
+    // 보너스: 성공한 리뷰 결과를 기록에 저장
+    saveHistoryEntry({
+      score: Number(data.score) || 0,
+      language,
+      snippet: code.slice(0, 60).replace(/\n/g, ' '),
+      createdAt: Date.now(),
+      result: data,
+    });
   } catch (error) {
     // 3) 지연/타임아웃(AbortError) 및 네트워크 오류 처리
     if (error.name === 'AbortError') {
