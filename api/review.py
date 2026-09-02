@@ -68,9 +68,16 @@ def log_to_notion(score, language, snippet):
     )
     try:
         urllib.request.urlopen(request, timeout=8)
-    except (urllib.error.URLError, urllib.error.HTTPError):
-        # Notion 기록 실패는 로그만 남기고 무시 (핵심 기능이 아니므로)
-        pass
+    except urllib.error.HTTPError as exc:
+        # Notion 기록 실패는 사용자 응답에는 영향을 주지 않지만,
+        # Vercel의 Runtime Logs(Deployments > 배포 클릭 > Logs)에서
+        # 원인을 확인할 수 있도록 남겨둔다. (보통 속성 이름 불일치가 원인)
+        try:
+            print(f"[notion] HTTPError {exc.code}: {exc.read().decode('utf-8')}")
+        except Exception:
+            print(f"[notion] HTTPError {exc.code}")
+    except urllib.error.URLError as exc:
+        print(f"[notion] URLError: {exc}")
 
 
 # 프롬프트에 넣을 리뷰 지침. Gemini에게 "반드시 JSON만" 반환하도록 강하게 지시한다.
