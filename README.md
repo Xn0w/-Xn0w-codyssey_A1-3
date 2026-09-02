@@ -71,6 +71,34 @@ vercel dev
 
 - **최근 리뷰 기록**: 리뷰 결과를 브라우저 `localStorage`에 최근 10개까지 저장하고, `review.html`에서 목록으로 다시 열람할 수 있습니다.
 - **다크/라이트 테마 토글**: 모든 페이지 상단의 버튼으로 테마를 전환할 수 있고, 선택은 `localStorage`에 저장되어 유지됩니다.
+- **Notion 데이터베이스 자동 기록**: AI 리뷰가 성공할 때마다 그 결과를 Notion 데이터베이스에 새 행으로 자동 저장합니다("사용자 입력 → AI 처리 → 외부 저장소 기록" 흐름).
+
+### Notion 연동 동작 원리
+
+`api/review.py`의 `log_to_notion()` 함수가 담당합니다.
+
+1. Gemini API로부터 리뷰 결과(점수, 피드백)를 정상적으로 받으면 이 함수를 호출합니다.
+2. 환경 변수 `NOTION_API_KEY` / `NOTION_DATABASE_ID`가 설정되어 있는지 확인합니다.
+   설정이 안 되어 있으면 아무 것도 하지 않고 조용히 넘어갑니다(이 기능이 없어도
+   AI 리뷰 자체는 정상 동작해야 하므로).
+3. 설정되어 있으면 Notion 공식 REST API(`POST https://api.notion.com/v1/pages`)를
+   호출해 아래 5개 속성을 채운 새 페이지(행)를 생성합니다.
+
+   | Notion 속성 | 타입 | 값 |
+   |---|---|---|
+   | `Name` | 제목 | `리뷰 결과 (언어명)` |
+   | `Score` | 숫자 | AI가 매긴 0~100 점수 |
+   | `Language` | 텍스트 | 선택한 프로그래밍 언어 |
+   | `Snippet` | 텍스트 | 리뷰한 코드의 앞부분 200자 (식별용 미리보기) |
+   | `CreatedAt` | 날짜 | 리뷰 요청 시각(UTC) |
+
+4. Notion 저장이 실패해도(네트워크 오류, 권한 문제 등) 예외를 내부에서 처리해
+   **사용자에게 보여줄 AI 리뷰 결과에는 영향을 주지 않습니다.** 대신 실패 원인은
+   Vercel의 Runtime Logs에 `[notion] ...` 형태로 남아 디버깅할 수 있습니다.
+
+Notion 쪽에서 준비해야 하는 것: [notion.so/my-integrations](https://www.notion.so/my-integrations)에서
+Internal Integration을 만들어 Secret을 발급받고, 기록할 데이터베이스에 위 표의 5개 속성(이름/타입)을
+정확히 맞춰 생성한 뒤, 그 데이터베이스에 통합(Integration)을 연결해야 합니다.
 
 ## 배포 URL
 
@@ -81,6 +109,8 @@ vercel dev
 | 변수명 | 설명 | 비고 |
 |---|---|---|
 | `GEMINI_API_KEY` | Google AI Studio에서 발급받는 Gemini API 키 | 로컬은 `.env`, 배포는 Vercel Environment Variables에 등록. 절대 코드나 커밋 이력에 남기지 않는다 |
+| `NOTION_API_KEY` | Notion Integration의 Internal Integration Secret | (선택) 보너스 기능용. 없으면 Notion 기록만 자동으로 건너뜀 |
+| `NOTION_DATABASE_ID` | 기록 대상 Notion 데이터베이스 ID | (선택) 페이지 URL의 `?` 앞 32자리 문자열 |
 
 ## 폴더 구조
 
