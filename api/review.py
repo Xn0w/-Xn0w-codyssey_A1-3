@@ -4,20 +4,78 @@
 # 프론트엔드(review.html)가 POST /api/review 로 {code, language}를
 # 보내면, Gemini API를 호출해 코드 리뷰 결과를 JSON으로 돌려준다.
 #
+# 보너스: 리뷰가 성공하면 Notion 데이터베이스에도 결과를 기록한다
+# (운영 자동화/데이터 저장 고도화). Notion 저장이 실패해도 사용자에게
+# 보여줄 리뷰 결과 자체에는 영향을 주지 않도록 예외를 따로 처리한다.
+#
 # 로컬 테스트: `vercel dev` 실행 후 http://localhost:3000/api/review
-# 배포 후: Vercel 프로젝트 Environment Variables에 GEMINI_API_KEY 등록 필수.
+# 배포 후: Vercel 프로젝트 Environment Variables에 아래 값 등록 필수.
+#   - GEMINI_API_KEY   (필수)
+#   - NOTION_API_KEY   (선택 — 없으면 Notion 기록 기능만 조용히 건너뜀)
+#   - NOTION_DATABASE_ID (선택)
 # ===========================================================
 
 import json
 import os
 import re
+import urllib.request
+import urllib.error
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler
 
 # google-genai SDK는 requirements.txt에 명시되어야 Vercel 빌드 시 설치된다.
 from google import genai
 
+NOTION_API_VERSION = "2022-06-28"
+
+
+def log_to_notion(score, language, snippet):
+    """
+    보너스: 리뷰 결과를 Notion 데이터베이스에 새 행으로 기록한다.
+
+    NOTION_API_KEY / NOTION_DATABASE_ID 환경 변수가 없으면 아무 것도 하지 않고
+    조용히 반환한다(이 기능이 없어도 핵심 리뷰 기능은 정상 동작해야 하므로).
+    외부 API 호출 실패도 예외를 삼켜서, Notion 쪽 문제가 사용자에게 보이는
+    AI 리뷰 결과에 영향을 주지 않도록 한다.
+    """
+    api_key = os.environ.get("NOTION_API_KEY")
+    database_id = os.environ.get("NOTION_DATABASE_ID")
+    if not api_key or not database_id:
+        return
+
+    payload = {
+        "parent": {"database_id": database_id},
+        "properties": {
+            "Name": {
+                "title": [{"text": {"content": f"리뷰 결과 ({language})"}}]
+            },
+            "Score": {"number": score},
+            "Language": {"rich_text": [{"text": {"content": language}}]},
+            "Snippet": {"rich_text": [{"text": {"content": snippet[:200]}}]},
+            "CreatedAt": {"date": {"start": datetime.now(timezone.utc).isoformat()}},
+        },
+    }
+
+    request = urllib.request.Request(
+        "https://api.notion.com/v1/pages",
+        data=json.dumps(payload).encode("utf-8"),
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Notion-Version": NOTION_API_VERSION,
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        urllib.request.urlopen(request, timeout=8)
+    except (urllib.error.URLError, urllib.error.HTTPError):
+        # Notion 기록 실패는 로그만 남기고 무시 (핵심 기능이 아니므로)
+        pass
+
+
 # 프롬프트에 넣을 리뷰 지침. Gemini에게 "반드시 JSON만" 반환하도록 강하게 지시한다.
 SYSTEM_INSTRUCTION = """당신은 학생들의 과제 코드를 검토하는 시니어 개발자입니다.
+
 주어진 코드를 읽고 아래 JSON 형식으로만 답하세요. 다른 설명, 마크다운 코드블록, 인사말은 절대 포함하지 마세요.
 
 {
@@ -112,5 +170,8 @@ class handler(BaseHTTPRequestHandler):
         if "score" not in result or "findings" not in result:
             self._send_json(502, {"error": "AI 응답에 필요한 필드가 없습니다."})
             return
+
+        # 보너스: Notion에 결과 기록 (실패해도 아래 응답에는 영향 없음)
+        log_to_notion(result.get("score"), language, code)
 
         self._send_json(200, result)
